@@ -1,4 +1,4 @@
-if game.PlaceId == 8540346411 then
+if game.PlaceId == 86782616351214 then
     local OrionLib = loadstring(game:HttpGet(('https://raw.githubusercontent.com/shlexware/Orion/main/source')))()
     local Window = OrionLib:MakeWindow({Name = "Troll Hub", HidePremium = false, IntroEnabled = false, IntroText = "Troll Hub", SaveConfig = true, ConfigFolder = "OrionTest"})
 
