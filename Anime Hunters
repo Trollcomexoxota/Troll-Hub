@@ -8,7 +8,7 @@ local Window = Rayfield:CreateWindow({
    ShowText = "Rayfield",
    Theme = "Default",
 
-   ToggleUIKeybind = Enum.KeyCode.RightControl, -- precisa ser um KeyCode válido
+   ToggleUIKeybind = Enum.KeyCode.RightControl,
 
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = false,
@@ -48,13 +48,12 @@ end
 local autoClicking = false
 local autoJoinRaid = false
 local autoDungeonEasy = false
-local autoClickNPCs = false
 
 -- Referência do Remote
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Signal")
 
--- Função: pegar NPC mais próximo dentro de Client.Enemies.World
+-- Função: pegar NPC mais próximo
 local function getClosestNPC()
     local player = game.Players.LocalPlayer
     if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
@@ -84,7 +83,7 @@ local function getClosestNPC()
     return closest
 end
 
--- Toggle Auto Clicker (normal)
+-- Toggle Auto Clicker (unificado)
 playerTab:CreateToggle({
    Name = "Auto Clicker",
    CurrentValue = false,
@@ -96,27 +95,6 @@ playerTab:CreateToggle({
       if autoClicking then
          task.spawn(function()
             while autoClicking do
-               local args = {"General", "Attack", "Click"}
-               remote:FireServer(unpack(args))
-               task.wait(0.1)
-            end
-         end)
-      end
-   end,
-})
-
--- Toggle Auto Clicker em NPCs
-playerTab:CreateToggle({
-   Name = "Auto Clicker NPCs",
-   CurrentValue = false,
-   Flag = "AutoClickerNPCs",
-   Callback = function(Value)
-      autoClickNPCs = Value
-      print("Auto Clicker NPCs:", autoClickNPCs and "Ativado" or "Desativado")
-
-      if autoClickNPCs then
-         task.spawn(function()
-            while autoClickNPCs do
                local npc = getClosestNPC()
                if npc and npc:FindFirstChild("Attributes") then
                    local idAttr = npc.Attributes:FindFirstChild("ID")
@@ -125,7 +103,7 @@ playerTab:CreateToggle({
                        remote:FireServer(unpack(args))
                    end
                end
-               task.wait(0.2)
+               task.wait(0.15)
             end
          end)
       end
