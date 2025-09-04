@@ -101,3 +101,42 @@ local ToggleRaid = playerTab:CreateToggle({
       end
    end,
 })
+
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Signal")
+
+local autoDungeonEasy = false
+
+-- Função para tentar entrar na dungeon
+local function joinDungeonEasy()
+    local args = {"Gamemodes", "Dungeon Easy", "Join"}
+    remote:FireServer(unpack(args))
+end
+
+-- Timer que verifica se está em horário cheio
+task.spawn(function()
+    while task.wait(5) do -- checa a cada 5 segundos
+        if autoDungeonEasy then
+            local hora = os.date("*t").hour
+            local minuto = os.date("*t").min
+
+            -- Se for início de hora (exemplo: 1:00, 2:00, 3:00...)
+            if minuto == 0 then
+                print("Tentando entrar na Dungeon Easy...")
+                joinDungeonEasy()
+            end
+        end
+    end
+end)
+
+-- Toggle no menu
+local ToggleDungeon = Tab:CreateToggle({
+   Name = "Dungeon Easy",
+   CurrentValue = false,
+   Flag = "AutoDungeonEasy",
+   Callback = function(Value)
+      autoDungeonEasy = Value
+      print("Auto Dungeon Easy: ", Value)
+   end,
+})
