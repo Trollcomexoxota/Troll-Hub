@@ -8,7 +8,7 @@ local Window = Rayfield:CreateWindow({
    ShowText = "Rayfield",
    Theme = "Default",
 
-   ToggleUIKeybind = Enum.KeyCode.RightControl,
+   ToggleUIKeybind = Enum.KeyCode.RightControl, -- precisa ser um KeyCode válido
 
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = false,
@@ -37,9 +37,8 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
--- Aba Player
+-- Criação da aba
 local playerTab = Window:CreateTab("Player", 0)
-
 if not playerTab then
     warn("Erro: a aba Player não foi criada corretamente!")
     return
@@ -47,37 +46,45 @@ end
 
 -- Variáveis de controle
 local autoClicking = false
-local autoClickingNPC = false
 local autoJoinRaid = false
 local autoDungeonEasy = false
+local autoClickNPCs = false
 
---------------------------------------------------------------------------------
--- Função utilitária: pegar NPC mais próximo com Attribute "ID"
---------------------------------------------------------------------------------
+-- Referência do Remote
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Signal")
+
+-- Função: pegar NPC mais próximo dentro de Client.Enemies.World
 local function getClosestNPC()
     local player = game.Players.LocalPlayer
-    local char = player.Character or player.CharacterAdded:Wait()
-    local hrp = char:WaitForChild("HumanoidRootPart")
+    if not player.Character or not player.Character:FindFirstChild("HumanoidRootPart") then
+        return nil
+    end
 
-    local closest, distance = nil, math.huge
-    for _, npc in pairs(workspace.World:GetDescendants()) do
-        if npc:IsA("Model") and npc:FindFirstChild("Humanoid") and npc:FindFirstChild("HumanoidRootPart") then
-            local id = npc:GetAttribute("ID")
-            if id then
-                local mag = (npc.HumanoidRootPart.Position - hrp.Position).Magnitude
-                if mag < distance then
-                    distance = mag
-                    closest = npc
+    local root = player.Character.HumanoidRootPart
+    local closest, dist = nil, math.huge
+
+    local clientFolder = workspace:FindFirstChild("Client")
+    if clientFolder and clientFolder:FindFirstChild("Enemies") and clientFolder.Enemies:FindFirstChild("World") then
+        for _, zone in ipairs(clientFolder.Enemies.World:GetChildren()) do
+            for _, npc in ipairs(zone:GetChildren()) do
+                if npc:FindFirstChild("HumanoidRootPart") and npc:FindFirstChild("Attributes") then
+                    local healthAttr = npc.Attributes:FindFirstChild("Health")
+                    if healthAttr and healthAttr.Value > 0 then
+                        local d = (npc.HumanoidRootPart.Position - root.Position).Magnitude
+                        if d < dist then
+                            closest, dist = npc, d
+                        end
+                    end
                 end
             end
         end
     end
+
     return closest
 end
 
---------------------------------------------------------------------------------
--- Auto Clicker padrão (sem NPC)
---------------------------------------------------------------------------------
+-- Toggle Auto Clicker (normal)
 playerTab:CreateToggle({
    Name = "Auto Clicker",
    CurrentValue = false,
@@ -90,11 +97,7 @@ playerTab:CreateToggle({
          task.spawn(function()
             while autoClicking do
                local args = {"General", "Attack", "Click"}
-               game:GetService("ReplicatedStorage")
-                  :WaitForChild("Remotes")
-                  :WaitForChild("Signal")
-                  :FireServer(unpack(args))
-
+               remote:FireServer(unpack(args))
                task.wait(0.1)
             end
          end)
@@ -102,41 +105,34 @@ playerTab:CreateToggle({
    end,
 })
 
---------------------------------------------------------------------------------
--- Auto Clicker que ataca NPCs automaticamente (usando Attribute "ID")
---------------------------------------------------------------------------------
+-- Toggle Auto Clicker em NPCs
 playerTab:CreateToggle({
    Name = "Auto Clicker NPCs",
    CurrentValue = false,
    Flag = "AutoClickerNPCs",
    Callback = function(Value)
-      autoClickingNPC = Value
-      print("Auto Clicker NPCs:", autoClickingNPC and "Ativado" or "Desativado")
+      autoClickNPCs = Value
+      print("Auto Clicker NPCs:", autoClickNPCs and "Ativado" or "Desativado")
 
-      if autoClickingNPC then
+      if autoClickNPCs then
          task.spawn(function()
-            while autoClickingNPC do
+            while autoClickNPCs do
                local npc = getClosestNPC()
-               if npc then
-                   local id = npc:GetAttribute("ID")
-                   if id then
-                       local args = {"General", "Attack", "Click", id}
-                       game:GetService("ReplicatedStorage")
-                           :WaitForChild("Remotes")
-                           :WaitForChild("Signal")
-                           :FireServer(unpack(args))
+               if npc and npc:FindFirstChild("Attributes") then
+                   local idAttr = npc.Attributes:FindFirstChild("ID")
+                   if idAttr then
+                       local args = {"General", "Attack", "Click", idAttr.Value}
+                       remote:FireServer(unpack(args))
                    end
                end
-               task.wait(0.15) -- intervalo de ataques
+               task.wait(0.2)
             end
          end)
       end
    end,
 })
 
---------------------------------------------------------------------------------
--- Auto Join Raid
---------------------------------------------------------------------------------
+-- Toggle Auto Join Raid
 playerTab:CreateToggle({
    Name = "Auto Join Raid",
    CurrentValue = false,
@@ -149,11 +145,7 @@ playerTab:CreateToggle({
          task.spawn(function()
             while autoJoinRaid do
                local args = {"Gamemodes", "Raid", "Join"}
-               game:GetService("ReplicatedStorage")
-                  :WaitForChild("Remotes")
-                  :WaitForChild("Signal")
-                  :FireServer(unpack(args))
-
+               remote:FireServer(unpack(args))
                task.wait(5)
             end
          end)
@@ -161,12 +153,7 @@ playerTab:CreateToggle({
    end,
 })
 
---------------------------------------------------------------------------------
 -- Auto Join Dungeon Easy
---------------------------------------------------------------------------------
-local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Signal")
-
 local function joinDungeonEasy()
     local args = {"Gamemodes", "Dungeon Easy", "Join"}
     remote:FireServer(unpack(args))
