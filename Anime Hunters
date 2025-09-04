@@ -8,7 +8,7 @@ local Window = Rayfield:CreateWindow({
    ShowText = "Rayfield",
    Theme = "Default",
 
-   ToggleUIKeybind = Enum.KeyCode.RightControl, -- corrigido: precisa ser KeyCode válido
+   ToggleUIKeybind = Enum.KeyCode.RightControl, -- precisa ser um KeyCode válido
 
    DisableRayfieldPrompts = false,
    DisableBuildWarnings = false,
@@ -43,6 +43,7 @@ local playerTab = Window:CreateTab("Player", 4483362458)
 -- Variáveis de controle
 local autoClicking = false
 local autoJoinRaid = false
+local autoDungeonEasy = false
 
 -- Toggle Auto Clicker
 local ToggleClick = playerTab:CreateToggle({
@@ -102,11 +103,9 @@ local ToggleRaid = playerTab:CreateToggle({
    end,
 })
 
-
+-- Auto Join Dungeon Easy
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Signal")
-
-local autoDungeonEasy = false
 
 -- Função para tentar entrar na dungeon
 local function joinDungeonEasy()
@@ -130,13 +129,13 @@ task.spawn(function()
     end
 end)
 
--- Toggle no menu
-local ToggleDungeon = Tab:CreateToggle({
+-- Toggle Dungeon Easy
+local ToggleDungeon = playerTab:CreateToggle({
    Name = "Dungeon Easy",
    CurrentValue = false,
    Flag = "AutoDungeonEasy",
    Callback = function(Value)
       autoDungeonEasy = Value
-      print("Auto Dungeon Easy: ", Value)
+      print("Auto Dungeon Easy:", autoDungeonEasy and "Ativado" or "Desativado")
    end,
 })
