@@ -37,8 +37,14 @@ local Window = Rayfield:CreateWindow({
    }
 })
 
--- Aba Player
-local playerTab = Window:CreateTab("Player", 4483362458)
+-- Criação da aba (ícone corrigido: 0 = sem ícone)
+local playerTab = Window:CreateTab("Player", 0)
+
+-- Garantia de que a aba foi criada
+if not playerTab then
+    warn("Erro: a aba Player não foi criada corretamente!")
+    return
+end
 
 -- Variáveis de controle
 local autoClicking = false
@@ -46,7 +52,7 @@ local autoJoinRaid = false
 local autoDungeonEasy = false
 
 -- Toggle Auto Clicker
-local ToggleClick = playerTab:CreateToggle({
+playerTab:CreateToggle({
    Name = "Auto Clicker",
    CurrentValue = false,
    Flag = "AutoClicker",
@@ -67,7 +73,7 @@ local ToggleClick = playerTab:CreateToggle({
                   :WaitForChild("Signal")
                   :FireServer(unpack(args))
 
-               task.wait(0.1) -- intervalo de cliques
+               task.wait(0.1)
             end
          end)
       end
@@ -75,7 +81,7 @@ local ToggleClick = playerTab:CreateToggle({
 })
 
 -- Toggle Auto Join Raid
-local ToggleRaid = playerTab:CreateToggle({
+playerTab:CreateToggle({
    Name = "Auto Join Raid",
    CurrentValue = false,
    Flag = "AutoJoinRaid",
@@ -96,7 +102,7 @@ local ToggleRaid = playerTab:CreateToggle({
                   :WaitForChild("Signal")
                   :FireServer(unpack(args))
 
-               task.wait(5) -- intervalo entre tentativas de entrar na raid
+               task.wait(5)
             end
          end)
       end
@@ -107,20 +113,15 @@ local ToggleRaid = playerTab:CreateToggle({
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local remote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("Signal")
 
--- Função para tentar entrar na dungeon
 local function joinDungeonEasy()
     local args = {"Gamemodes", "Dungeon Easy", "Join"}
     remote:FireServer(unpack(args))
 end
 
--- Timer que verifica se está em horário cheio
 task.spawn(function()
-    while task.wait(5) do -- checa a cada 5 segundos
+    while task.wait(5) do
         if autoDungeonEasy then
-            local hora = os.date("*t").hour
             local minuto = os.date("*t").min
-
-            -- Se for início de hora (exemplo: 1:00, 2:00, 3:00...)
             if minuto == 0 then
                 print("Tentando entrar na Dungeon Easy...")
                 joinDungeonEasy()
@@ -129,8 +130,7 @@ task.spawn(function()
     end
 end)
 
--- Toggle Dungeon Easy
-local ToggleDungeon = playerTab:CreateToggle({
+playerTab:CreateToggle({
    Name = "Dungeon Easy",
    CurrentValue = false,
    Flag = "AutoDungeonEasy",
